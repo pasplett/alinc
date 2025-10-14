@@ -30,14 +30,13 @@
 |
 
 =====
-alinc
+ALINC
 =====
 
 
-    Add a short description here!
+    Active Learning for Inductive Node Classification
 
 
-A longer description of your project goes here...
 
 
 .. _pyscaffold-notes:
