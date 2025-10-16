@@ -3,11 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from torch_geometric.nn import (
+    GCNConv,
     GATConv
 )
 
 def load_model(key, *args, **kwargs):
     model_dict = {
+        "gcn": GCN,
         "gat": GAT
     }
     return model_dict[key.lower()](*args, **kwargs)
@@ -44,7 +46,7 @@ class BaseModel(nn.Module):
     def __init__(
             self,  in_dim, hidden_dim, n_classes, out_dim=None, n_layers=2, 
             edge_dim=None, in_feat_dropout=0.0, dropout=0.0, batch_norm=True, 
-            residual=True, activation=F.relu, seed=42, 
+            residual=True, activation=F.relu, self_loops=False, seed=42, 
             device=torch.device("cpu"), **kwargs
         ):
         super(BaseModel, self).__init__()
@@ -65,13 +67,13 @@ class BaseModel(nn.Module):
         self.batch_norm = batch_norm
         self.residual = residual
         self.activation = activation
+        self.self_loops = self_loops    
         self.device = device
 
         self.convs = nn.ModuleList()
         self.batchnorms = nn.ModuleList()
         self.embedding_x = nn.Embedding(self.in_dim, self.hidden_dim)
         self.mlp_layer = MLPReadout(self.out_dim, self.n_classes)
-        
 
     def forward(self, x, edge_index, edge_attr=None):
 
@@ -80,17 +82,21 @@ class BaseModel(nn.Module):
         if self.training:
             x = self.in_feat_dropout(x)
 
+        x = self._conv(x, edge_index, edge_attr=edge_attr)
+        
+        x = self.mlp_layer(x)
+
+        return x
+    
+    def _conv(self, x, edge_index, edge_attr=None):
+
         for i, conv in enumerate(self.convs):
             x_in = x # for residual connection
 
             if self.edge_dim:
-                x = conv(
-                    x, edge_index, edge_attr=edge_attr
-                )
+                x = conv(x, edge_index, edge_attr=edge_attr)
             else:
-                x = conv(
-                    x, edge_index
-                )
+                x = conv(x, edge_index)
 
             if self.batch_norm:
                 x = self.batchnorms[i](x)
@@ -100,13 +106,12 @@ class BaseModel(nn.Module):
 
             if self.residual:
                 x = x_in + x # residual connection
-        
-        x = self.mlp_layer(x)
 
         return x
     
     def loss(self, pred, label):
-
+        """See github.com/graphdeeplearning/benchmarking-gnns
+        """
         # calculating label weights for weighted loss computation
         V = label.size(0)
         label_count = torch.bincount(label)
@@ -123,17 +128,71 @@ class BaseModel(nn.Module):
         return loss
 
 
+class GCN(BaseModel):
+    def __init__(
+            self, in_dim, hidden_dim, n_classes, **kwargs
+        ):
+        super(GCN, self).__init__(in_dim, hidden_dim, n_classes, **kwargs)
+
+        self.dropout = nn.Dropout(self.dropout)
+
+        in_channels = self.hidden_dim
+        for _ in range(self.n_layers - 1):
+            self.convs.append(
+                GCNConv(
+                    in_channels, self.hidden_dim, add_self_loops=self.self_loops
+                )
+            )
+            if self.batch_norm:
+                self.batchnorms.append(
+                    nn.BatchNorm1d(self.hidden_dim)
+                )
+            in_channels = self.hidden_dim
+
+        self.convs.append(
+            GCNConv(
+                in_channels, self.out_dim, add_self_loops=self.self_loops
+            )
+        )
+        if self.batch_norm:
+            self.batchnorms.append(
+                nn.BatchNorm1d(self.out_dim)
+            )
+
+    def _conv(self, x, edge_index, edge_attr=None):
+
+        for i, conv in enumerate(self.convs):
+            x_in = x # for residual connection
+
+            x = conv(x, edge_index)
+
+            if self.batch_norm:
+                x = self.batchnorms[i](x)
+
+            if self.activation:
+                x = self.activation(x)
+
+            if self.residual:
+                x = x_in + x # residual connection
+            
+            x = self.dropout(x)
+
+        return x
+
+
 class GAT(BaseModel):
     def __init__(
             self, in_dim, hidden_dim, n_classes, n_heads=1, 
             self_loops=False, **kwargs
         ):
+        out_dim = kwargs.pop("out_dim", None)
+        if out_dim is None:
+            out_dim = hidden_dim * n_heads
         super(GAT, self).__init__(
-            in_dim, hidden_dim, n_classes, out_dim=hidden_dim * n_heads, 
+            in_dim, hidden_dim, n_classes, out_dim=out_dim, 
             **kwargs
         )
-        self.n_heads = n_heads
-        self.self_loops = self_loops    
+        self.n_heads = n_heads 
         self.embedding_x = nn.Embedding(
             self.in_dim, self.hidden_dim * self.n_heads
         )
@@ -146,7 +205,8 @@ class GAT(BaseModel):
                     add_self_loops=self.self_loops
                 )
             )
-            self.batchnorms.append(
-                nn.BatchNorm1d(self.hidden_dim * self.n_heads)
-            )
+            if self.batch_norm:
+                self.batchnorms.append(
+                    nn.BatchNorm1d(self.hidden_dim * self.n_heads)
+                )
             in_channels = self.hidden_dim * self.n_heads
