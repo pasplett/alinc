@@ -14,7 +14,7 @@ from alinc.callbacks import EarlyStoppingCB, BestModelCB
 from alinc.constants import NON_ATT_GNNS
 from alinc.datasets import load_dataset
 from alinc.models import load_model
-from alinc.path import EXP_PATH, DATA_PATH
+from alinc.path import EXP_PATH
 from alinc.utils import check_gpu, load_optimizer, train, test
 
 def main():
@@ -42,30 +42,25 @@ def main():
     experiment = "cluster/"
     save_dir = os.path.join(EXP_PATH, experiment)
 
-    print(DATA_PATH)
-
     # Experimental Setting
     dataset = "cluster"
     params = { 
-        "batch_size": 64,
-        "infer_batch_size": 64,
+        "batch_size": 128,
+        "infer_batch_size": 128,
         "max_epochs": 1000,
         "early_stopping_mode": "max",
-        "patience": 20,
+        "early_stopping_patience": 20,
         "optimizer": "adam",
         "optimizer_params": {
             "weight_decay": 0.0
         },
-        "loss_function": "bcewithlogits",
-        "loss_function_params": {},
-        "evaluator": "binary_classification",
-        "evaluator_params": {},
+        "lr_reduce_factor": 0.5,
+        "lr_scheduler_patience": 5,
         "primary_metric": "acc",
-        "save_interval": 1,
-        "save_model": False,
+        "save_interval": 1000,
+        "save_model": True,
         "save_optimizer": False,
-        "status_interval": 2,
-        "num_workers": 0
+        "status_interval": 5
     }
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -89,7 +84,6 @@ def main():
         "n_classes": 6,
         "in_feat_dropout": 0.0,
         "dropout": 0.0,
-        "readout": "mean",
         "batch_norm": True,
         "residual": True,
         "device": device
@@ -111,16 +105,16 @@ def main():
 
     # Data Loaders
     train_loader = DataLoader(
-        train_dataset, batch_size=params["batch_size"], shuffle=True, 
-        drop_last=False,
+        train_dataset, batch_size=params["batch_size"], 
+        shuffle=True, drop_last=False
     )
     val_loader = DataLoader(
-        val_dataset, batch_size=params["infer_batch_size"], shuffle=False, 
-        drop_last=False,
+        val_dataset, batch_size=params["infer_batch_size"], 
+        shuffle=False, drop_last=False
     )
     test_loader = DataLoader(
-        test_dataset, batch_size=params["infer_batch_size"], shuffle=False, 
-        drop_last=False,
+        test_dataset, batch_size=params["infer_batch_size"], 
+        shuffle=False, drop_last=False,
     )
 
     # Experiment Loop
@@ -194,10 +188,12 @@ def main():
                             )
                             lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                                 optimizer, mode=params["early_stopping_mode"], 
-                                factor=0.5, patience=5
+                                factor=params["lr_reduce_factor"], 
+                                patience=["lr_scheduler_patience"]
                             )
                             early_stopping = EarlyStoppingCB(
-                                mode=params["early_stopping_mode"], patience=params["patience"]
+                                mode=params["early_stopping_mode"], 
+                                patience=params["early_stopping_patience"]
                             )
                             best_model_cb = BestModelCB(
                                 mode=params["early_stopping_mode"]
