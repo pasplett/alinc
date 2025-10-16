@@ -4,12 +4,15 @@ import torch.nn.functional as F
 
 from torch_geometric.nn import (
     GCNConv,
-    GATConv
+    GATConv,
+    GINConv
 )
+from torch_geometric.nn.models import MLP
 
 def load_model(key, *args, **kwargs):
     model_dict = {
         "gcn": GCN,
+        "gin": GIN,
         "gat": GAT
     }
     return model_dict[key.lower()](*args, **kwargs)
@@ -73,7 +76,7 @@ class BaseModel(nn.Module):
         self.convs = nn.ModuleList()
         self.batchnorms = nn.ModuleList()
         self.embedding_x = nn.Embedding(self.in_dim, self.hidden_dim)
-        self.mlp_layer = MLPReadout(self.out_dim, self.n_classes)
+        self.readout_layer = MLPReadout(self.out_dim, self.n_classes)
 
     def forward(self, x, edge_index, edge_attr=None):
 
@@ -84,7 +87,7 @@ class BaseModel(nn.Module):
 
         x = self._conv(x, edge_index, edge_attr=edge_attr)
         
-        x = self.mlp_layer(x)
+        x = self.readout_layer(x)
 
         return x
     
@@ -175,15 +178,109 @@ class GCN(BaseModel):
             if self.residual:
                 x = x_in + x # residual connection
             
-            x = self.dropout(x)
+            if self.training:
+                x = self.dropout(x)
 
         return x
+    
+
+class GIN(BaseModel):
+    def __init__(
+            self, in_dim, hidden_dim, n_classes, train_eps=True, 
+            n_layers_mlp_gin=2, **kwargs
+        ):
+        super(GIN, self).__init__(in_dim, hidden_dim, n_classes, **kwargs)
+
+        self.dropout = nn.Dropout(self.dropout)
+        self.train_eps = train_eps
+        self.n_layers_mlp_gin = n_layers_mlp_gin
+
+        in_channels = self.hidden_dim
+        for _ in range(self.n_layers - 1):
+            mlp = MLP(
+                in_channels=in_channels, 
+                hidden_channels=self.hidden_dim,
+                out_channels=self.hidden_dim,
+                num_layers=self.n_layers_mlp_gin
+            )
+            self.convs.append(
+                GINConv(nn=mlp, train_eps=self.train_eps)
+            )
+            if self.batch_norm:
+                self.batchnorms.append(
+                    nn.BatchNorm1d(self.hidden_dim)
+                )
+            in_channels = self.hidden_dim
+
+        
+        mlp = MLP(
+            in_channels=in_channels, 
+            hidden_channels=self.hidden_dim,
+            out_channels=self.out_dim,
+            num_layers=self.n_layers_mlp_gin
+        )
+        self.convs.append(
+                GINConv(nn=mlp, train_eps=self.train_eps)
+        )
+        if self.batch_norm:
+            self.batchnorms.append(
+                nn.BatchNorm1d(self.out_dim)
+            )
+
+        # Readout per layer
+        self.readout_layer = nn.ModuleList([
+            nn.Linear(self.hidden_dim, self.n_classes)
+            for _ in range(self.n_layers)
+        ])
+        self.readout_layer.append(
+            nn.Linear(self.out_dim, self.n_classes)
+        )
+
+    def forward(self, x, edge_index, edge_attr=None):
+
+        x = torch.argmax(x, dim=1)
+        x = self.embedding_x(x)
+
+        if self.training:
+            x = self.in_feat_dropout(x)
+
+        x = self._conv(x, edge_index)
+        
+        score_over_layer = 0
+        for i, xi in enumerate(x):
+            score_over_layer += self.readout_layer[i](xi)
+
+        return score_over_layer
+
+    def _conv(self, x, edge_index):
+
+        x_layers = [x]
+
+        for i, conv in enumerate(self.convs):
+            x_in = x # for residual connection
+
+            x = conv(x, edge_index)
+
+            if self.batch_norm:
+                x = self.batchnorms[i](x)
+
+            if self.activation:
+                x = self.activation(x)
+
+            if self.residual:
+                x = x_in + x # residual connection
+            
+            if self.training:
+                x = self.dropout(x)
+
+            x_layers.append(x)
+
+        return x_layers
 
 
 class GAT(BaseModel):
     def __init__(
-            self, in_dim, hidden_dim, n_classes, n_heads=1, 
-            self_loops=False, **kwargs
+            self, in_dim, hidden_dim, n_classes, n_heads=1, **kwargs
         ):
         out_dim = kwargs.pop("out_dim", None)
         if out_dim is None:
