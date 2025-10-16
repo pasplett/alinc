@@ -33,7 +33,15 @@ def main():
         help="Use this flag to activate tqdm progress bar",
         action="store_true"
     )
+    parser.add_argument(
+        "-db", "--debug_mode",
+        help="Use this flag to activate debug mode",
+        action="store_true"
+    )
     args, unknown = parser.parse_known_args()
+
+    if args.debug_mode:
+        print("CAUTION! DEBUG MODE")
 
     # Check GPU availability 
     device = check_gpu(log=True)
@@ -86,6 +94,7 @@ def main():
         "dropout": 0.0,
         "batch_norm": True,
         "residual": True,
+        "self_loops": False,
         "device": device
     }
 
@@ -144,7 +153,7 @@ def main():
                             f"_hid{model_params['hidden_dim']}" + \
                             f"_nl{model_params['n_layers']}" + \
                             f"_lr{model_params['learning_rate']}" + \
-                            f"_h{model_params['n_heads']}/"
+                            (f"_h{model_params['n_heads']}/" if "n_heads" in model_params.keys() else "/")
                         )
                         if os.path.exists(model_save_dir) and not args.overwrite:
                             print(
@@ -189,7 +198,7 @@ def main():
                             lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                                 optimizer, mode=params["early_stopping_mode"], 
                                 factor=params["lr_reduce_factor"], 
-                                patience=["lr_scheduler_patience"]
+                                patience=params["lr_scheduler_patience"]
                             )
                             early_stopping = EarlyStoppingCB(
                                 mode=params["early_stopping_mode"], 
@@ -210,7 +219,7 @@ def main():
                             for epoch in epochs:
 
                                 t0 = time.perf_counter()
-                                train_metrics, optimizer = train(model, train_loader, optimizer)
+                                train_metrics, optimizer = train(model, train_loader, optimizer, debug_mode=args.debug_mode)
                                 t1 = time.perf_counter()
                                 val_metrics = test(model, val_loader)
                                 t2 = time.perf_counter()
