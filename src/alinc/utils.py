@@ -43,7 +43,7 @@ def accuracy_SBM(scores, targets):
     return acc
 
 
-def train(model, loader, optimizer, use_edge_attr=False):
+def train(model, loader, optimizer, use_edge_attr=False, debug_mode=False):
     model.train()
     epoch_loss = 0.
     epoch_acc = 0.
@@ -64,6 +64,9 @@ def train(model, loader, optimizer, use_edge_attr=False):
         optimizer.step()
         epoch_loss += loss.detach().item()
         epoch_acc += accuracy_SBM(yhat, g.y)
+
+        if debug_mode:
+            break
 
     epoch_loss /= (iter + 1)
     epoch_acc /= (iter + 1)
