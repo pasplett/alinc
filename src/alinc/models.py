@@ -4,8 +4,9 @@ import torch.nn.functional as F
 
 from torch_geometric.nn import (
     GCNConv,
+    GINConv,
     GATConv,
-    GINConv
+    ResGatedGraphConv
 )
 from torch_geometric.nn.models import MLP
 
@@ -13,14 +14,17 @@ def load_model(key, *args, **kwargs):
     model_dict = {
         "gcn": GCN,
         "gin": GIN,
-        "gat": GAT
+        "gat": GAT,
+        "gatedgcn": GatedGCN,
+        "gps": GPS
     }
     return model_dict[key.lower()](*args, **kwargs)
 
 
 class MLPReadout(nn.Module):
-
-    def __init__(self, in_dim, out_dim, n_layers=2): #L=nb_hidden_layers
+    """See github.com/graphdeeplearning/benchmarking-gnns
+    """
+    def __init__(self, in_dim, out_dim, n_layers=2):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -307,3 +311,96 @@ class GAT(BaseModel):
                     nn.BatchNorm1d(self.hidden_dim * self.n_heads)
                 )
             in_channels = self.hidden_dim * self.n_heads
+
+
+class GatedGCN(BaseModel):
+    def __init__(
+            self, in_dim, hidden_dim, n_classes, pos_enc=False, pos_enc_dim=2, 
+            **kwargs
+        ):
+        super(GatedGCN, self).__init__(
+            in_dim, hidden_dim, n_classes, pos_enc=pos_enc, 
+            pos_enc_dim=pos_enc_dim, **kwargs
+        )
+
+        self.dropout = nn.Dropout(self.dropout)
+        if self.edge_dim:
+            self.embedding_e = nn.Linear(self.edge_dim, self.hidden_dim)
+
+        # Positional Encodings
+        self.pos_enc = pos_enc
+        self.pos_enc_dim = pos_enc_dim
+        if self.pos_enc:
+            self.embedding_pos_enc = nn.Linear(self.pos_enc_dim, self.hidden_dim)
+
+        in_channels = self.hidden_dim
+        for _ in range(self.n_layers - 1):
+            self.convs.append(
+                ResGatedGraphConv(
+                    in_channels, self.hidden_dim, edge_dim=self.edge_dim
+                )
+            )
+            if self.batch_norm:
+                self.batchnorms.append(
+                    nn.BatchNorm1d(self.hidden_dim)
+                )
+            in_channels = self.hidden_dim
+
+        self.convs.append(
+            ResGatedGraphConv(
+                in_channels, self.out_dim, edge_dim=self.edge_dim
+            )
+        )
+        if self.batch_norm:
+            self.batchnorms.append(
+                nn.BatchNorm1d(self.out_dim)
+            )
+
+
+    def forward(self, x, edge_index, edge_attr=None, x_pos_enc=None):
+
+        x = torch.argmax(x, dim=1)
+        x = self.embedding_x(x)
+        if self.training:
+            x = self.in_feat_dropout(x)
+
+        if self.edge_dim:
+            edge_attr = self.embedding_e(edge_attr)
+
+        if self.pos_enc:
+            x_pos_enc = self.embedding_pos_enc(x_pos_enc.float())
+            x = x + x_pos_enc
+
+        x = self._conv(x, edge_index, edge_attr=edge_attr)
+        
+        x = self.readout_layer(x)
+
+        return x
+    
+    def _conv(self, x, edge_index, edge_attr=None):
+
+        for i, conv in enumerate(self.convs):
+            x_in = x # for residual connection
+
+            x = conv(x, edge_index, edge_attr=edge_attr)
+
+            if self.batch_norm:
+                x = self.batchnorms[i](x)
+
+            if self.activation:
+                x = self.activation(x)
+
+            if self.residual:
+                x = x_in + x # residual connection
+            
+            if self.training:
+                x = self.dropout(x)
+
+        return x
+    
+
+class GPS(BaseModel):
+    def __init__(
+        self, in_dim, hidden_dim, n_classes, **kwargs
+    ):
+        raise NotImplementedError()
