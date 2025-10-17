@@ -1,4 +1,5 @@
 import numpy as np
+from omegaconf import OmegaConf
 import os
 import random
 import torch
@@ -133,13 +134,13 @@ def build_datasets(args, device=torch.device("cpu")):
 
 def build_model(args, num_features, num_classes, device=torch.device("cpu")):
 
-    model_params = {
-        "in_dim": num_features,
-        "hidden_dim": args.model.hidden_dim,
-        "n_classes": num_classes,
-        "n_layers": args.model.n_layers
-    }
-    model = load_model(args.model.name, **model_params)
+    model_params = OmegaConf.to_container(args.model)
+    model_name = model_params.pop("name")
+    for kw in ["num_epochs", "train_batch_size", "predict_batch_size"]:
+        model_params.pop(kw)
+    model_params["in_dim"] = num_features
+    model_params["n_classes"] = num_classes
+    model = load_model(model_name, **model_params)
     model.to(device)
 
     optimizer = load_optimizer(

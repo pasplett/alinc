@@ -1,5 +1,5 @@
 name: gat
-num_epochs: 1
+num_epochs: 200
 train_batch_size: 128
 predict_batch_size: 128
 n_layers: 4
