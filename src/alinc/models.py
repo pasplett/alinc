@@ -1,3 +1,4 @@
+import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -95,6 +96,10 @@ class BaseModel(nn.Module):
 
         return x
     
+    def reset_state(self):
+        self.cpu()
+        self.load_state_dict(self.init_model_state)
+    
     def _conv(self, x, edge_index, edge_attr=None):
 
         for i, conv in enumerate(self.convs):
@@ -165,6 +170,7 @@ class GCN(BaseModel):
             self.batchnorms.append(
                 nn.BatchNorm1d(self.out_dim)
             )
+        self.init_model_state = copy.deepcopy(self.state_dict())
 
     def _conv(self, x, edge_index, edge_attr=None):
 
@@ -239,6 +245,7 @@ class GIN(BaseModel):
         self.readout_layer.append(
             nn.Linear(self.out_dim, self.n_classes)
         )
+        self.init_model_state = copy.deepcopy(self.state_dict())
 
     def forward(self, x, edge_index, edge_attr=None):
 
@@ -311,6 +318,7 @@ class GAT(BaseModel):
                     nn.BatchNorm1d(self.hidden_dim * self.n_heads)
                 )
             in_channels = self.hidden_dim * self.n_heads
+        self.init_model_state = copy.deepcopy(self.state_dict())
 
 
 class GatedGCN(BaseModel):
@@ -355,6 +363,7 @@ class GatedGCN(BaseModel):
             self.batchnorms.append(
                 nn.BatchNorm1d(self.out_dim)
             )
+        self.init_model_state = copy.deepcopy(self.state_dict())
 
 
     def forward(self, x, edge_index, edge_attr=None, x_pos_enc=None):
