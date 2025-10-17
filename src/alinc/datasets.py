@@ -1,7 +1,10 @@
+import torch
+
 from alinc.path import DATA_PATH
 from torch_geometric.datasets import GNNBenchmarkDataset
 
 def load_dataset(key, *args, **kwargs):
+    device = kwargs.pop("device", torch.device("cpu"))
     model_dict = {
         "pattern": GNNBenchmarkDataset(
             root=DATA_PATH,
@@ -14,4 +17,4 @@ def load_dataset(key, *args, **kwargs):
             *args, **kwargs
         )
     }
-    return model_dict[key.lower()]
+    return model_dict[key.lower()].to(device)

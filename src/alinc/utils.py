@@ -1,6 +1,13 @@
-import torch
-from sklearn.metrics import confusion_matrix
 import numpy as np
+import os
+import random
+import torch
+
+from sklearn.metrics import confusion_matrix
+from torch_geometric.loader import DataLoader
+
+from alinc.datasets import load_dataset
+from alinc.models import load_model
 
 
 def check_gpu(log=True):
@@ -24,6 +31,9 @@ def load_optimizer(key, *args, **kwargs):
 
 
 def accuracy_SBM(scores, targets):
+    """Accuracy for Stochastic Block Model (SBM) datasets 'Pattern' and 
+    'Cluster' from https://github.com/graphdeeplearning/benchmarking-gnns
+    """
     S = targets.cpu().numpy()
     C = np.argmax( torch.nn.Softmax(dim=1)(scores).cpu().detach().numpy() , axis=1 )
     CM = confusion_matrix(S,C).astype(np.float32)
@@ -100,3 +110,70 @@ def test_epoch(model, loader, evaluator, use_edge_attr=False):
     test_stats["acc_SBM"] = epoch_acc_SBM / (iter + 1)
     return test_stats
 
+
+def build_datasets(args, device=torch.device("cpu")):
+
+    train_ds = load_dataset(args.dataset, split="train", device=device)
+    val_ds = load_dataset(args.dataset, split="val", device=device)
+    test_ds = load_dataset(args.dataset, split="test", device=device)
+    num_classes = torch.max(train_ds[0].y).item() + 1
+
+    train_loader = DataLoader(
+        train_ds, batch_size=args.model.train_batch_size, shuffle=True, drop_last=False
+    )
+    val_loader = DataLoader(
+        val_ds, batch_size=args.model.predict_batch_size, shuffle=False, drop_last=False
+    )
+    test_loader = DataLoader(
+        test_ds, batch_size=args.model.predict_batch_size, shuffle=False, drop_last=False
+    )
+
+    return train_loader, val_loader, test_loader, num_classes
+
+
+def build_model(args, num_features, num_classes, device=torch.device("cpu")):
+
+    model_params = {
+        "in_dim": num_features,
+        "hidden_dim": args.model.hidden_dim,
+        "n_classes": num_classes,
+        "n_layers": args.model.n_layers
+    }
+    model = load_model(args.model.name, **model_params)
+    model.to(device)
+
+    optimizer = load_optimizer(
+        args.optimizer.name, model.parameters(), 
+        lr=args.optimizer.lr, 
+        weight_decay=args.optimizer.weight_decay
+    )
+
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="max", factor=0.5, patience=5
+    )
+
+    return model, optimizer, lr_scheduler
+
+
+def seed_everything(seed: int):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
+def flatten_cfg(cfg, parent_key='', sep='.'):
+    """From DAL-Toolbox: https://github.com/dhuseljic/dal-toolbox
+    """
+    from omegaconf import DictConfig
+    items = []
+    for k, v in cfg.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, (dict, DictConfig)):
+            items.extend(flatten_cfg(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
