@@ -11,7 +11,7 @@ def load_evaluator(key, *args, **kwargs):
 
 
 class BaseEvaluator:
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.metrics = {}
     
     def __len__(self):
@@ -34,7 +34,7 @@ class BaseEvaluator:
 
 class BinaryClassificationEvaluator(BaseEvaluator):
 
-    def __init__(self, device=torch.device("cpu")):
+    def __init__(self, device=torch.device("cpu"), **kwargs):
         super().__init__()
         self.metrics = {
             "acc": evalm.BinaryAccuracy(device=device),
@@ -55,7 +55,8 @@ class BinaryClassificationEvaluator(BaseEvaluator):
 class MulticlassClassificationEvaluator(BaseEvaluator):
 
     def __init__(
-            self, average="macro", num_classes=3, device=torch.device("cpu")
+            self, average="macro", num_classes=3, device=torch.device("cpu"),
+            **kwargs
         ):
         super().__init__()
         self.metrics = {
