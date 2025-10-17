@@ -43,10 +43,14 @@ def accuracy_SBM(scores, targets):
     return acc
 
 
-def train(model, loader, optimizer, use_edge_attr=False, debug_mode=False):
+def train_epoch(
+        model, loader, optimizer, evaluator, use_edge_attr=False, 
+        debug_mode=False
+    ):
     model.train()
     epoch_loss = 0.
-    epoch_acc = 0.
+    epoch_acc_SBM = 0.
+    evaluator.reset()
     for iter, g in enumerate(loader):
         
         x = g.x.to(torch.int64)
@@ -57,29 +61,28 @@ def train(model, loader, optimizer, use_edge_attr=False, debug_mode=False):
             edge_attr = None
         
         optimizer.zero_grad()
-        yhat = model(x, edge_index, edge_attr=edge_attr)
+        logits = model(x, edge_index, edge_attr=edge_attr)
 
-        loss = model.loss(yhat, g.y)
+        loss = model.loss(logits, g.y)
         loss.backward()
         optimizer.step()
         epoch_loss += loss.detach().item()
-        epoch_acc += accuracy_SBM(yhat, g.y)
+        epoch_acc_SBM += accuracy_SBM(logits, g.y)
+        evaluator.update(logits, g.y)
 
         if debug_mode:
             break
 
-    epoch_loss /= (iter + 1)
-    epoch_acc /= (iter + 1)
-    train_metrics = {
-        "loss": epoch_loss,
-        "acc": epoch_acc
-    }
-    return train_metrics, optimizer
+    train_stats = evaluator.compute()
+    train_stats["loss"] = epoch_loss / (iter + 1)
+    train_stats["acc_SBM"] = epoch_acc_SBM / (iter + 1)
+    return train_stats, optimizer
 
 
-def test(model, loader, use_edge_attr=False):
+def test_epoch(model, loader, evaluator, use_edge_attr=False):
     model.eval()
-    epoch_acc = 0.
+    epoch_acc_SBM = 0.
+    evaluator.reset()
     for iter, g in enumerate(loader):
 
         x = g.x.to(torch.int64)
@@ -89,14 +92,11 @@ def test(model, loader, use_edge_attr=False):
         else:
             edge_attr = None
         
-        y_pred = model(x, edge_index, edge_attr=edge_attr)
-        epoch_acc += accuracy_SBM(y_pred, g.y)
+        logits = model(x, edge_index, edge_attr=edge_attr)
+        epoch_acc_SBM += accuracy_SBM(logits, g.y)
+        evaluator.update(logits, g.y)
 
-    epoch_acc /= (iter + 1)
-
-    results_dict = {
-        "acc": epoch_acc
-    }
-
-    return results_dict
+    test_stats = evaluator.compute()
+    test_stats["acc_SBM"] = epoch_acc_SBM / (iter + 1)
+    return test_stats
 

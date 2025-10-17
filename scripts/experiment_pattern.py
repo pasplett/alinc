@@ -13,9 +13,10 @@ from tqdm import tqdm
 from alinc.callbacks import EarlyStoppingCB, BestModelCB
 from alinc.constants import NON_ATT_GNNS
 from alinc.datasets import load_dataset
+from alinc.evaluators import load_evaluator
 from alinc.models import load_model
 from alinc.path import EXP_PATH
-from alinc.utils import check_gpu, load_optimizer, train, test
+from alinc.utils import check_gpu, load_optimizer, train_epoch, test_epoch
 
 def main():
     # Argument parser
@@ -55,16 +56,21 @@ def main():
     params = { 
         "batch_size": 128,
         "infer_batch_size": 128,
-        "max_epochs": 1000,
+        "max_epochs": 1,
         "early_stopping_mode": "max",
         "early_stopping_patience": 20,
         "optimizer": "adam",
         "optimizer_params": {
             "weight_decay": 0.0
         },
+        "evaluator": "multiclass_classification",
+        "evaluator_params": {
+            "num_classes": 2,
+            "average": "macro"
+        },
         "lr_reduce_factor": 0.5,
         "lr_scheduler_patience": 5,
-        "primary_metric": "acc",
+        "primary_metric": "acc_SBM",
         "save_interval": 1000,
         "save_model": True,
         "save_optimizer": False,
@@ -86,7 +92,7 @@ def main():
         json.dump(params, f)
 
     # Model Parameters
-    model_names = ["gat"]
+    model_names = ["gcn"]
     fix_model_params = {
         "in_dim": 3,
         "n_classes": 2,
@@ -99,7 +105,7 @@ def main():
     }
 
     # Hyperparameters
-    hidden_dim = [19]
+    hidden_dim = [146]
     n_layers = [4]
     n_heads = [8]
     learning_rate = [0.001]
@@ -124,6 +130,11 @@ def main():
     test_loader = DataLoader(
         test_dataset, batch_size=params["infer_batch_size"], 
         shuffle=False, drop_last=False,
+    )
+
+    # Evaluator
+    evaluator = load_evaluator(
+        params["evaluator"], **params["evaluator_params"]
     )
 
     # Experiment Loop
@@ -219,9 +230,11 @@ def main():
                             for epoch in epochs:
 
                                 t0 = time.perf_counter()
-                                train_metrics, optimizer = train(model, train_loader, optimizer, debug_mode=args.debug_mode)
+                                train_metrics, optimizer = train_epoch(
+                                    model, train_loader, optimizer, evaluator, debug_mode=args.debug_mode
+                                )
                                 t1 = time.perf_counter()
-                                val_metrics = test(model, val_loader)
+                                val_metrics = test_epoch(model, val_loader, evaluator)
                                 t2 = time.perf_counter()
 
                                 # Display status
@@ -297,7 +310,7 @@ def main():
                     else:
                         checkpoint = best_state_dict
                     model.load_state_dict(checkpoint)
-                    test_metrics = test(model, test_loader)
+                    test_metrics = test_epoch(model, test_loader, evaluator)
                     test_metrics = {"test_" + k : v for k, v in test_metrics.items()}
                     eval_dict = best_metrics | test_metrics
                     with open(os.path.join(run_save_dir, "evaluation.json"), "w") as f:
