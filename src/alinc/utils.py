@@ -62,7 +62,7 @@ def train_epoch(
     epoch_acc_SBM = 0.
     evaluator.reset()
     for iter, g in enumerate(loader):
-        
+
         x = g.x.to(torch.int64)
         edge_index = g.edge_index
         if use_edge_attr:

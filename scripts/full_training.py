@@ -127,9 +127,8 @@ def main(args):
     test_stats = {"test_" + k : v for k, v in test_stats.items()}
 
     # MLflow
-    abs_path = os.path.abspath(args.mlflow_dir)
-    tracking_uri = f"sqlite:///{abs_path}/{args.mlflow_db}"
-    artifact_location = f"file:///{abs_path}/mlruns"
+    tracking_uri = f"sqlite:///{args.mlflow_dir}/{args.mlflow_db}"
+    artifact_location = f"file://{args.mlflow_dir}/mlruns"
     mlflow.set_tracking_uri(uri=tracking_uri)
     if not mlflow.get_experiment_by_name(args.experiment_name):
         mlflow.create_experiment(
