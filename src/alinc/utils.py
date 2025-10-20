@@ -103,7 +103,9 @@ def test_epoch(model, loader, evaluator, use_edge_attr=False):
         else:
             edge_attr = None
         
-        logits = model(x, edge_index, edge_attr=edge_attr)
+        with torch.no_grad():
+            logits = model(x, edge_index, edge_attr=edge_attr)
+
         epoch_acc_SBM += accuracy_SBM(logits, g.y)
         evaluator.update(logits, g.y)
 
