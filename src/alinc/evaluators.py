@@ -194,6 +194,8 @@ class SPEvaluator(BaseEvaluator):
     
 
 class ZaretzkiEvaluator(MulticlassClassificationEvaluator):
+    TOPK_METRICS = {"top2": 2, "top3": 3}
+
     def __init__(
             self, average="macro", num_classes=3, device=torch.device("cpu"),
             average_only=False, **kwargs
@@ -220,10 +222,20 @@ class ZaretzkiEvaluator(MulticlassClassificationEvaluator):
         y_pred_topk = [y_pred_topk[batch == i] for i in range(torch.max(batch) + 1)]
         y_pred_topk = pad_sequence(y_pred_topk, batch_first=True, padding_value=-1e6)
         y_true_topk = [y_true[batch == i] for i in range(torch.max(batch) + 1)]
-        y_true_topk = pad_sequence(y_true_topk, batch_first=True, padding_value=-1e6)
+        y_true_topk = pad_sequence(y_true_topk, batch_first=True, padding_value=0)
+
+        max_k = max(self.TOPK_METRICS.values())
+        if y_pred_topk.shape[1] < max_k:
+            pad_size = max_k - y_pred_topk.shape[1]
+            y_pred_topk = torch.nn.functional.pad(
+                y_pred_topk, (0, pad_size), value=-1e6
+            )
+            y_true_topk = torch.nn.functional.pad(
+                y_true_topk, (0, pad_size), value=0
+            )
 
         for key, metric in self.metrics.items():
-            if key in ["top2", "top3"]:
+            if key in self.TOPK_METRICS:
                 metric.update(y_pred_topk, y_true_topk)
             else:
                 metric.update(y_pred, y_true)
@@ -236,7 +248,7 @@ class ZaretzkiEvaluator(MulticlassClassificationEvaluator):
                 stats[key] = 100 * metric_stats.item()
             elif key == "mcc":
                 stats[key] = metric_stats.item()
-            elif key in ["top2", "top3"]:
+            elif key in self.TOPK_METRICS:
                 stats[key] = 100 * metric_stats.item()
             else:
                 for c in range(self.num_classes):
