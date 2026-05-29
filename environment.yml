@@ -1,0 +1,32 @@
+name: alinc-github
+channels:
+  - pytorch
+  - nvidia
+  - pyg
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - pip
+  - setuptools
+  - setuptools_scm
+  - wheel
+  - pytorch=*=*cuda*
+  - pytorch-cuda=12.1
+  - pytorch-mutex=*=*cuda*
+  - pyg=*=*cu121*
+  - pytorch-scatter=*=*cu121*
+  - rdkit
+  - pip:
+      - numpy
+      - networkx
+      - tqdm
+      - hydra-core
+      - omegaconf
+      - mlflow
+      - torchmetrics
+      - torcheval
+      - ogb
+      - pytest
+      - pytest-cov
+      - -e .

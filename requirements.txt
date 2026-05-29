@@ -1,0 +1,16 @@
+numpy
+networkx
+tqdm
+hydra-core
+omegaconf
+mlflow
+torch
+torch-geometric
+torch-scatter
+rdkit
+torchmetrics
+torcheval
+ogb
+pytest
+pytest-cov
+-e .
