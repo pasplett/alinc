@@ -5,7 +5,7 @@ import torch
 from collections import defaultdict
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from torch_geometric.data import Data, InMemoryDataset
+from torch_geometric.data import Data, InMemoryDataset, download_url
 from typing import List, Optional, Callable
 
 # =============================================================================
@@ -69,9 +69,15 @@ def bond_to_feature_vector(bond):
 
 # =============================================================================
 # 2. Zaretzki Dataset Class
+#    Raw data source: https://github.com/molinfo-vienna/FAME.AL
 # =============================================================================
 
 class ZaretzkiDataset(InMemoryDataset):
+    url = (
+        "https://raw.githubusercontent.com/molinfo-vienna/FAME.AL/"
+        "main/data/zaretzki_preprocessed.sdf"
+    )
+
     def __init__(
             self, 
             root: str,
@@ -103,7 +109,6 @@ class ZaretzkiDataset(InMemoryDataset):
 
     @property
     def raw_file_names(self):
-        # We assume the user provides the path to the SDF manually in __init__
         return ["zaretzki_preprocessed.sdf"]
     
     @property
@@ -117,6 +122,9 @@ class ZaretzkiDataset(InMemoryDataset):
     @property
     def processed_paths(self) -> List[str]:
         return [osp.join(self.processed_dir, f) for f in self.processed_file_names]
+
+    def download(self):
+        download_url(self.url, self.raw_dir, filename=self.raw_file_names[0])
 
     def process(self):
         suppl = Chem.SDMolSupplier(self.raw_paths[0], removeHs=False)

@@ -11,7 +11,9 @@ from alinc.custom_datasets.zaretzki import (
     safe_index,
 )
 import alinc.datasets as datasets_module
+import alinc.custom_datasets.zaretzki as zaretzki_module
 from alinc.datasets import load_dataset, log_progress
+from alinc.custom_datasets.zaretzki import ZaretzkiDataset
 
 
 def test_safe_index_falls_back_to_misc_bucket():
@@ -95,6 +97,33 @@ def test_load_dataset_dispatches_zaretzki_and_ignores_user_root(monkeypatch):
 
     assert isinstance(dataset, FakeZaretzkiDataset)
     assert calls == [{"root": "data-root", "split": "test", "seed": 7}]
+
+
+def test_zaretzki_download_fetches_preprocessed_sdf_to_raw_dir(monkeypatch):
+    calls = []
+
+    def fake_download_url(url, folder, log=True, filename=None):
+        calls.append(
+            {
+                "url": url,
+                "folder": folder,
+                "filename": filename,
+            }
+        )
+
+    monkeypatch.setattr(zaretzki_module, "download_url", fake_download_url)
+    dataset = object.__new__(ZaretzkiDataset)
+    dataset.root = "data-root/Zaretzki"
+
+    dataset.download()
+
+    assert calls == [
+        {
+            "url": ZaretzkiDataset.url,
+            "folder": dataset.raw_dir,
+            "filename": "zaretzki_preprocessed.sdf",
+        }
+    ]
 
 
 def test_log_progress_yields_all_items_and_reports_completion(capsys):
