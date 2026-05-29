@@ -1,0 +1,28 @@
+name: gps
+num_epochs: 200
+train_batch_size: 50
+predict_batch_size: 50
+n_layers: 8
+hidden_dim: 68
+n_heads: 4
+pos_enc: False
+pos_enc_dim: 16
+readout_type: mlp
+n_readout_layers: 1
+dropout: 0.1
+att_dropout: 0.5
+activation: gelu
+batch_norm: False
+layer_norm: True
+optimizer: 
+  name: AdamW
+  lr: 1e-3
+  weight_decay: 0.
+  clip_grad_norm: True
+early_stopping:
+  mode: "max"
+  patience: 20
+lr_scheduler:
+  name: cosine_with_warmup
+  warmup_steps: 10
+  start_factor: 0.002

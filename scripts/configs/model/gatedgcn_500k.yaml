@@ -1,6 +1,0 @@
-name: gatedgcn
-num_epochs: 200
-train_batch_size: 64
-predict_batch_size: 64
-n_layers: 16
-hidden_dim: 78

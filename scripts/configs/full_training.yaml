@@ -1,9 +1,10 @@
 defaults:
-  - model: gcn_pattern_100k
+  - dataset: pattern
+  - model: gat_SBM_100k
 
 random_seed: 42
 experiment_name: alinc-full
-mlflow_dir: ./../experiments/full_training/
+mlflow_dir: ./experiments/alinc/full_training/
 mlflow_db: full_training.db
 num_workers: 0
 logging: True
@@ -11,21 +12,7 @@ progressbar: False
 status_interval: 1
 debug_mode: False
 
-dataset: pattern
-
-optimizer: 
-  name: Adam
-  lr: 1e-3
-  weight_decay: 0.0
-
-primary_metric: acc_SBM
-evaluator:
-  name: multiclass_classification
-  average: macro
-
-early_stopping:
-  mode: max
-  patience: 20
+early_stopping: False
 
 output_dir: ./output/
 hydra:

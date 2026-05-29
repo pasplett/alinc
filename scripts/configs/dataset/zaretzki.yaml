@@ -1,0 +1,12 @@
+name: zaretzki
+primary_metric: top2
+evaluator: 
+  name: zaretzki
+  average: macro
+node_encoder: ogbmol
+edge_encoder: ogbmol
+is_undirected: True
+eigen:
+  max_freqs: 16
+  norm_type: none
+  eigvec_norm: L2

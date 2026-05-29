@@ -1,0 +1,11 @@
+name: cluster
+primary_metric: acc_macro
+evaluator: 
+  name: multiclass_classification
+  average: macro
+node_encoder: embedding
+is_undirected: True
+eigen:
+  max_freqs: 10
+  norm_type: none
+  eigvec_norm: L2

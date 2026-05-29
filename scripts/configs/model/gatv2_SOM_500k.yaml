@@ -1,0 +1,24 @@
+name: gatv2
+num_epochs: 200
+train_batch_size: 64
+predict_batch_size: 64
+n_layers: 16
+hidden_dim: 78
+n_heads: 4
+pos_enc: False
+pos_enc_dim: 16
+readout_type: mlp
+dropout: 0.0
+in_feat_dropout: 0.0
+optimizer: 
+  name: AdamW
+  lr: 1e-3
+  weight_decay: 0.0
+  clip_grad_norm: False
+early_stopping:
+  mode: "max"
+  patience: 20
+lr_scheduler:
+  name: cosine_with_warmup
+  warmup_steps: 10
+  start_factor: 0.002

@@ -1,0 +1,13 @@
+name: coco-sp
+primary_metric: f1_macro
+evaluator: 
+  name: sp
+  average: macro
+  average_only: True
+node_encoder: linear
+edge_encoder: linear
+is_undirected: True
+eigen:
+  max_freqs: 10
+  norm_type: none
+  eigvec_norm: L2
