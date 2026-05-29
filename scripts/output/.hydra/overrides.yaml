@@ -1,6 +1,0 @@
-- dataset=pattern
-- model=gat_SBM_100k
-- al=random
-- dataset.num_acq=3
-- dataset.acq_size=5
-- model.num_epochs=1

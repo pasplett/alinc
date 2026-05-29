@@ -39,6 +39,28 @@ ALINC
 
 
 
+Installation
+============
+
+The project dependency files target Python 3.13 with the newest PyTorch/PyG
+binary stack that still provides a matching ``torch-scatter`` wheel:
+PyTorch 2.11.0 + CUDA 12.8, TorchVision 0.26.0, PyG 2.7.0, and
+``torch-scatter`` 2.1.2 for PyTorch 2.11/CUDA 12.8.
+
+Create the environment with:
+
+.. code-block:: bash
+
+   conda env create -f environment.yml
+   conda activate alinc-github
+
+or install into an existing Python 3.13 environment with:
+
+.. code-block:: bash
+
+   pip install -r requirements.txt
+
+
 .. _pyscaffold-notes:
 
 Note
