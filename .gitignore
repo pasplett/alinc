@@ -58,3 +58,4 @@ data/*
 
 # Experiments
 experiments/*
+output/*
