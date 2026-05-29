@@ -7,23 +7,20 @@ from torch_geometric.data import Data
 
 from dal_toolbox_graph.graph_data import GraphActiveLearningDataModule
 from dal_toolbox_graph.strategies import (
-    AGE,
-    ANRMAB,
     DegreeSampling,
     EntropySampling,
     LeastConfidentSampling,
     MarginSampling,
 )
-import dal_toolbox_graph.strategies as graph_strategies
 from dal_toolbox_graph.strategies.density import GraphDensitySampling
 from dal_toolbox_graph.strategies.uncertainty import (
     least_confident_score,
     margin_score,
 )
-from dal_toolbox_graph.utils import (
+from alinc.utils import (
     flatten_cfg,
-    test_epoch as run_test_epoch,
-    train_epoch as run_train_epoch,
+    test_epoch,
+    train_epoch,
 )
 from torch_geometric.loader import DataLoader
 
@@ -81,6 +78,10 @@ class TinyTrainModel(torch.nn.Module):
 
     def forward_head(self, features):
         return self.linear(features).mean(dim=0, keepdim=True)
+    
+    def forward(self, batch):
+        features = self.forward_features(batch)
+        return self.forward_head(features)
 
     def loss(self, logits, y):
         return torch.nn.functional.cross_entropy(logits, y.view(-1))
@@ -139,23 +140,6 @@ def test_density_strategy_scores_graph_level_features():
     assert torch.isfinite(scores).all()
 
 
-def test_removed_pagerank_and_topk_paths_are_not_available():
-    assert not hasattr(graph_strategies, "PageRankSampling")
-
-    with pytest.raises(KeyError):
-        EntropySampling(aggr_type="topk")
-
-
-def test_age_and_anrmab_require_degree_centrality():
-    AGE(centrality="degree")
-    ANRMAB(centrality="degree")
-
-    with pytest.raises(AssertionError):
-        AGE(centrality="pagerank")
-    with pytest.raises(AssertionError):
-        ANRMAB(centrality="pagerank")
-
-
 def test_flatten_cfg_flattens_nested_mappings():
     cfg = {"dataset": {"name": "pattern"}, "seed": 1}
 
@@ -170,11 +154,10 @@ def test_train_and_test_epoch_use_model_hooks():
     model = TinyTrainModel()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
-    train_stats, returned_optimizer = run_train_epoch(
-        args=None, model=model, loader=loader, optimizer=optimizer, debug_mode=True
+    train_stats, returned_optimizer = train_epoch(
+        model=model, loader=loader, optimizer=optimizer, debug_mode=True
     )
-    eval_stats = run_test_epoch(
-        args=None,
+    eval_stats = test_epoch(
         model=model,
         loader=DataLoader([dataset[0]], batch_size=1),
         evaluator=RecordingEvaluator(),

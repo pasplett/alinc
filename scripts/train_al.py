@@ -14,15 +14,16 @@ logging.getLogger("sklearn").setLevel(logging.ERROR)
 
 @hydra.main(version_base=None, config_path="./configs", config_name="active_learning")
 def main(args):
-    from alinc.utils import build_evaluator, check_gpu
-    from dal_toolbox_graph.graph_data import GraphActiveLearningDataModule
-    from dal_toolbox_graph.utils import (
+    from alinc.utils import (
+        build_evaluator,
         build_datasets,
         build_model,
+        check_gpu,
         flatten_cfg,
         seed_everything,
         test_epoch,
     )
+    from dal_toolbox_graph.graph_data import GraphActiveLearningDataModule
 
     seed_everything(42)
     print(OmegaConf.to_yaml(args))
@@ -107,7 +108,7 @@ def main(args):
             device=device
         )
         test_stats = test_epoch(
-            args, model, test_loader, evaluator,
+            model, test_loader, evaluator,
             debug_mode=args.debug_mode, device=device
         )
         test_stats = {"test_" + k : v for k, v in test_stats.items()}
@@ -142,7 +143,7 @@ def main(args):
 def train(args, model, train_loader, optimizer, lr_scheduler, val_loader=None, 
           evaluator=None, device=torch.device("cpu")):
     from alinc.callbacks import BestModelCB, EarlyStoppingCB
-    from dal_toolbox_graph.utils import test_epoch, train_epoch
+    from alinc.utils import test_epoch, train_epoch
 
     
     if args.early_stopping:
@@ -166,12 +167,12 @@ def train(args, model, train_loader, optimizer, lr_scheduler, val_loader=None,
 
         # Train and evaluate
         train_stats, optimizer = train_epoch(
-            args, model, train_loader, optimizer, debug_mode=args.debug_mode,
+            model, train_loader, optimizer, debug_mode=args.debug_mode,
             clip_grad_norm=args.model.optimizer.clip_grad_norm, device=device
         )
         if args.early_stopping or args.model.lr_scheduler.name == "reduce_lr_on_plateau":
             val_stats = test_epoch(
-                args, model, val_loader, evaluator, debug_mode=args.debug_mode,
+                model, val_loader, evaluator, debug_mode=args.debug_mode,
                 device=device
             )
             val_performance = val_stats[args.dataset.primary_metric]
@@ -218,7 +219,7 @@ def train(args, model, train_loader, optimizer, lr_scheduler, val_loader=None,
         return model, best_val_stats
     elif not(val_loader is None) and not(evaluator is None):
         val_stats = test_epoch(
-            args, model, val_loader, evaluator, debug_mode=args.debug_mode,
+            model, val_loader, evaluator, debug_mode=args.debug_mode,
             device=device
         )
         val_stats = {"val_" + k : v for k, v in val_stats.items()}

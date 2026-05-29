@@ -17,7 +17,7 @@ logging.getLogger("sklearn").setLevel(logging.ERROR)
 def main(args):
     from alinc.callbacks import EarlyStoppingCB, BestModelCB
     from alinc.utils import (
-        build_datasets,
+        build_dataloaders,
         build_evaluator,
         build_model,
         check_gpu,
@@ -37,7 +37,7 @@ def main(args):
     device = check_gpu(log=True)
 
     # Dataset
-    train_loader, val_loader, test_loader = build_datasets(args)
+    train_loader, val_loader, test_loader = build_dataloaders(args)
     num_features = train_loader.dataset[0].x.shape[1]
     num_classes = torch.max(train_loader.dataset.y).item() + 1
 
