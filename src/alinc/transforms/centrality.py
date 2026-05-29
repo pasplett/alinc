@@ -36,11 +36,13 @@ class AddPageRank(BaseTransform):
             self, 
             alpha: float = 0.2, 
             eps: float = 1e-5,
+            max_iter: int = 1000,
             attr_name: str = "ppr"
         ):
         super().__init__()
         self.alpha = alpha
         self.eps = eps
+        self.max_iter = max_iter
         self.attr_name = attr_name
 
     def forward(self, data: Data) -> Data:
@@ -49,7 +51,8 @@ class AddPageRank(BaseTransform):
         assert num_nodes is not None
 
         ppr_scores = pagerank(
-            to_networkx(data), alpha=self.alpha, tol=self.eps
+            to_networkx(data), alpha=self.alpha, tol=self.eps,
+            max_iter=self.max_iter
         )
         ppr_scores = torch.Tensor(
             np.fromiter(ppr_scores.values(), dtype=float)
