@@ -1,9 +1,9 @@
 name: gatedgcn_pyg
 num_epochs: 200
-train_batch_size: 64
-predict_batch_size: 64
-n_layers: 16
-hidden_dim: 78
+train_batch_size: 32
+predict_batch_size: 32
+n_layers: 6
+hidden_dim: 106
 pos_enc: False
 pos_enc_dim: 16
 readout_type: mlp
@@ -11,7 +11,7 @@ dropout: 0.0
 in_feat_dropout: 0.0
 optimizer: 
   name: AdamW
-  lr: 1e-3
+  lr: 1e-4
   weight_decay: 0.0
   clip_grad_norm: False
 early_stopping:

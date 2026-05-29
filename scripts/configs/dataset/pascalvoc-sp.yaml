@@ -1,12 +1,19 @@
 name: pascalvoc-sp
+num_acq: 20
+acq_size: 10
+subset_size: 1000
+num_init: null
+node_encoder: linear
+edge_encoder: linear
 primary_metric: f1_macro
+is_undirected: True
 evaluator: 
   name: sp
   average: macro
   average_only: True
-node_encoder: linear
-edge_encoder: linear
-is_undirected: True
+early_stopping:
+  mode: "max"
+  patience: 20
 eigen:
   max_freqs: 10
   norm_type: none

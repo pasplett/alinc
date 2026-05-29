@@ -6,7 +6,7 @@ pytest.importorskip("torch_geometric")
 
 from torch_geometric.data import Data
 
-from alinc.transforms import AddLapEigendec, AddNodeDegree, AddPageRank
+from alinc.transforms import AddLapEigendec, AddNodeDegree
 from alinc.transforms.eigendec import eigvec_normalizer, get_lap_decomp_stats
 from alinc.transforms.voc_norm import COCONodeNorm, VOCEdgeNorm, VOCNodeNorm
 
@@ -22,15 +22,6 @@ def test_add_node_degree_uses_source_node_degrees():
     data = AddNodeDegree()(path_graph())
 
     assert torch.equal(data.degree, torch.tensor([1.0, 2.0, 1.0]))
-
-
-def test_add_pagerank_adds_one_score_per_node():
-    pytest.importorskip("networkx")
-
-    data = AddPageRank(alpha=0.85, eps=1e-8)(path_graph())
-
-    assert data.ppr.shape == (3,)
-    assert torch.isclose(data.ppr.sum(), torch.tensor(1.0), atol=1e-5)
 
 
 def test_laplacian_eigendecomposition_pads_to_requested_frequency_count():
@@ -79,4 +70,3 @@ def test_voc_and_coco_normalizers_apply_stored_statistics():
     assert torch.allclose(voc_node_norm(voc_data).x, torch.zeros(1, 14))
     assert torch.allclose(voc_edge_norm(voc_data).edge_attr, torch.zeros(1, 2))
     assert torch.allclose(coco_node_norm(coco_data).x, torch.zeros(1, 14))
-

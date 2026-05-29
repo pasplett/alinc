@@ -5,20 +5,9 @@ import hydra
 import mlflow
 import logging
 import torch
+from pathlib import Path
 
 from omegaconf import OmegaConf
-
-from alinc.callbacks import EarlyStoppingCB, BestModelCB
-from alinc.utils import (
-    build_datasets,
-    build_evaluator,
-    build_model,
-    check_gpu,
-    flatten_cfg,
-    seed_everything,
-    test_epoch,
-    train_epoch
-)
 
 
 mlflow.config.enable_async_logging()
@@ -26,6 +15,18 @@ logging.getLogger("sklearn").setLevel(logging.ERROR)
 
 @hydra.main(version_base=None, config_path="./configs", config_name="full_training")
 def main(args):
+    from alinc.callbacks import EarlyStoppingCB, BestModelCB
+    from alinc.utils import (
+        build_datasets,
+        build_evaluator,
+        build_model,
+        check_gpu,
+        flatten_cfg,
+        seed_everything,
+        test_epoch,
+        train_epoch
+    )
+
     seed_everything(42)
     print(OmegaConf.to_yaml(args))
 
@@ -144,8 +145,9 @@ def main(args):
     test_stats = {"test_" + k : v for k, v in test_stats.items()}
 
     # MLflow
-    tracking_uri = f"sqlite:///{args.mlflow_dir}/{args.mlflow_db}"
-    artifact_location = f"file://{args.mlflow_dir}/mlruns"
+    mlflow_dir = Path(args.mlflow_dir).resolve()
+    tracking_uri = f"sqlite:///{(mlflow_dir / args.mlflow_db).as_posix()}"
+    artifact_location = (mlflow_dir / "mlruns").as_uri()
     mlflow.set_tracking_uri(uri=tracking_uri)
     if not mlflow.get_experiment_by_name(args.experiment_name):
         mlflow.create_experiment(

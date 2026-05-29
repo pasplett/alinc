@@ -1,14 +1,6 @@
-import numpy as np
-import torch
-
 from torch_geometric.data import Data
 from torch_geometric.transforms import BaseTransform
-from torch_geometric.utils import (
-    degree,
-    to_networkx
-)
-
-from networkx.algorithms.link_analysis import pagerank
+from torch_geometric.utils import degree
 
 class AddNodeDegree(BaseTransform):
     """Adds node degree."""
@@ -29,34 +21,3 @@ class AddNodeDegree(BaseTransform):
 
         return data
     
-
-class AddPageRank(BaseTransform):
-    """Adds (approximate) PageRank centrality using Andersen PPR."""
-    def __init__(
-            self, 
-            alpha: float = 0.2, 
-            eps: float = 1e-5,
-            max_iter: int = 1000,
-            attr_name: str = "ppr"
-        ):
-        super().__init__()
-        self.alpha = alpha
-        self.eps = eps
-        self.max_iter = max_iter
-        self.attr_name = attr_name
-
-    def forward(self, data: Data) -> Data:
-        assert data.edge_index is not None
-        num_nodes = data.num_nodes
-        assert num_nodes is not None
-
-        ppr_scores = pagerank(
-            to_networkx(data), alpha=self.alpha, tol=self.eps,
-            max_iter=self.max_iter
-        )
-        ppr_scores = torch.Tensor(
-            np.fromiter(ppr_scores.values(), dtype=float)
-        )
-        
-        setattr(data, self.attr_name, ppr_scores)
-        return data

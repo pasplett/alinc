@@ -1,0 +1,3 @@
+strategy: margin
+aggr_type: max
+device: cpu

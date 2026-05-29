@@ -1,0 +1,3 @@
+strategy: coreset
+aggr_type: sum
+device: cpu

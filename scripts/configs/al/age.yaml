@@ -1,0 +1,14 @@
+strategy: age
+aggr_type: max
+device: cpu
+params:
+  uncertainty: entropy
+  density: node
+  centrality: degree
+  alpha: 0.25
+  beta: 0.25
+  gamma: 0.5
+  time_sensitive: True
+  basef: 0.85
+  aggr_first: False
+  n_clusters: null

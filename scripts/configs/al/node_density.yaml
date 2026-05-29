@@ -1,0 +1,4 @@
+strategy: node_density
+aggr_type: max
+n_clusters: null
+device: cpu

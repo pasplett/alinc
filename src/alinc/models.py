@@ -273,9 +273,6 @@ class BaseModel(nn.Module):
                 elif output_type == 'degrees':
                     degrees = g_batch.degree
                     outputs['degrees'].append(degrees.cpu())
-                elif output_type == 'ppr':
-                    ppr = g_batch.ppr.cpu()
-                    outputs['ppr'].append(ppr)
                 else:
                     raise NotImplementedError()   
 

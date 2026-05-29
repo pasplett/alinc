@@ -73,4 +73,3 @@ def test_zaretzki_evaluator_handles_batchwise_topk_metrics():
 def test_load_evaluator_rejects_unknown_names():
     with pytest.raises(KeyError, match="Evaluator 'missing' not found"):
         load_evaluator("missing")
-

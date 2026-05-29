@@ -16,6 +16,4 @@ early_stopping:
   mode: "max"
   patience: 20
 lr_scheduler:
-  name: reduce_lr_on_plateau
-  reduce_factor: 0.5
-  patience: 10
+  name: cosine

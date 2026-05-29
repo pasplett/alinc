@@ -1,0 +1,10 @@
+strategy: anrmab
+aggr_type: max
+device: cpu
+params:
+  uncertainty: entropy
+  density: node
+  centrality: degree
+  min_probability_strategy: 0.2
+  aggr_first: True
+  n_clusters: null

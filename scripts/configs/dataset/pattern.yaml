@@ -1,10 +1,17 @@
 name: pattern
+num_acq: 20
+acq_size: 5
+subset_size: 1000
+num_init: null
+node_encoder: embedding
 primary_metric: acc_macro
+is_undirected: True
 evaluator: 
   name: multiclass_classification
   average: macro
-node_encoder: embedding
-is_undirected: True
+early_stopping:
+  mode: "max"
+  patience: 20
 eigen:
   max_freqs: 16
   norm_type: none

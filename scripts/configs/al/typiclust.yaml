@@ -1,0 +1,3 @@
+strategy: typiclust
+aggr_type: max
+device: cpu

@@ -1,0 +1,3 @@
+strategy: entropy
+aggr_type: max
+device: cpu

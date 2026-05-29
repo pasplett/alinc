@@ -1,0 +1,26 @@
+defaults:
+  - dataset: pascalvoc-sp
+  - model: gps_SP_500k
+  - al: random
+
+random_seed: 42
+experiment_name: alinc-active
+mlflow_dir: ./experiments/alinc/active_learning/
+mlflow_db: active_learning.db
+num_workers: 0
+logging: True
+progressbar: False
+status_interval: 10
+debug_mode: False
+strict_det_gpu: False
+
+early_stopping: False
+
+output_dir: ./output/
+hydra:
+  run:
+    dir: ${output_dir}
+  job_logging:
+    handlers:
+      file:
+        mode: w

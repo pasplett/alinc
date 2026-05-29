@@ -1,11 +1,18 @@
 name: zaretzki
+num_acq: 20
+acq_size: 5
+subset_size: null
+num_init: null
+node_encoder: ogbmol
+edge_encoder: ogbmol
 primary_metric: top2
+is_undirected: True
 evaluator: 
   name: zaretzki
   average: macro
-node_encoder: ogbmol
-edge_encoder: ogbmol
-is_undirected: True
+early_stopping:
+  mode: "max"
+  patience: 20
 eigen:
   max_freqs: 16
   norm_type: none
