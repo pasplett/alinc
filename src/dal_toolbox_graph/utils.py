@@ -7,9 +7,6 @@ from omegaconf import OmegaConf
 
 from torch_geometric.transforms import Compose
 
-from alinc.datasets import load_dataset
-from alinc.models import load_model
-from alinc.utils import load_optimizer
 from alinc.transforms import (
     VOCNodeNorm, 
     VOCEdgeNorm,
@@ -32,6 +29,8 @@ def seed_everything(seed, strict_mode=False):
 
 
 def build_datasets(args):
+    from alinc.datasets import load_dataset
+
     
     transform = None
     if args.dataset.name.lower() == "pascalvoc-sp":
@@ -48,6 +47,8 @@ def build_datasets(args):
 
 
 def build_model(args, num_features, num_classes, edge_dim=None, device=torch.device("cpu")):
+    from alinc.models import load_model
+    from alinc.utils import load_optimizer
 
     model_params = OmegaConf.to_container(args.model)
     model_name = model_params.pop("name")
