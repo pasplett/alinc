@@ -104,6 +104,10 @@ def test_epoch(
     return test_stats
 
 
+train_epoch.__test__ = False
+test_epoch.__test__ = False
+
+
 def build_datasets(args):
 
     transform = None
