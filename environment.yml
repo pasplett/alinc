@@ -27,7 +27,7 @@ dependencies:
       - ogb==1.3.6
       - scikit-learn==1.8.0
       - scipy==1.17.1
-      - dal_toolbox @ git+https://github.com/dhuseljic/dal-toolbox.git
+      - dal_toolbox @ git+https://github.com/dhuseljic/dal-toolbox.git@e9bf05ca9d1999b831522602f1d64f584b9e928e
       - pytest==9.0.3
       - pytest-cov==7.1.0
       - -e .
