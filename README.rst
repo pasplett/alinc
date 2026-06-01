@@ -1,42 +1,28 @@
-.. These are examples of badges you might want to add to your README:
-   please update the URLs accordingly
-
-    .. image:: https://api.cirrus-ci.com/github/<USER>/alinc.svg?branch=main
-        :alt: Built Status
-        :target: https://cirrus-ci.com/github/<USER>/alinc
-    .. image:: https://readthedocs.org/projects/alinc/badge/?version=latest
-        :alt: ReadTheDocs
-        :target: https://alinc.readthedocs.io/en/stable/
-    .. image:: https://img.shields.io/coveralls/github/<USER>/alinc/main.svg
-        :alt: Coveralls
-        :target: https://coveralls.io/r/<USER>/alinc
-    .. image:: https://img.shields.io/pypi/v/alinc.svg
-        :alt: PyPI-Server
-        :target: https://pypi.org/project/alinc/
-    .. image:: https://img.shields.io/conda/vn/conda-forge/alinc.svg
-        :alt: Conda-Forge
-        :target: https://anaconda.org/conda-forge/alinc
-    .. image:: https://pepy.tech/badge/alinc/month
-        :alt: Monthly Downloads
-        :target: https://pepy.tech/project/alinc
-    .. image:: https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter
-        :alt: Twitter
-        :target: https://twitter.com/alinc
-
-.. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
-    :alt: Project generated with PyScaffold
-    :target: https://pyscaffold.org/
-
-|
-
 =====
 ALINC
 =====
 
+Active Learning for Inductive Node Classification.
 
-    Active Learning for Inductive Node Classification
+This repository contains the official implementation for the paper
+``ALINC: Active Learning for Inductive Node Classification via Graph Sampling``,
+accepted at ECML PKDD 2026.
+
+ALINC is an active-learning framework for inductive node-classification
+settings where datasets consist of many independent graphs and annotating one
+node effectively requires annotating the full graph. It contains PyTorch
+Geometric models, dataset loaders, graph transforms, evaluators, and graph-level
+active-learning query strategies used in the paper's benchmark and case studies.
 
 
+Features
+========
+
+* Training utilities for GCN, GIN/GINE, GAT/GATv2, GatedGCN, and GPS models.
+* Dataset helpers for PATTERN, CLUSTER, PascalVOC-SP, COCO-SP, and Zaretzki.
+* Active-learning strategies adapted for graph batches, including uncertainty,
+  density, centrality, CoreSet, BADGE, AGE, ANRMAB, and TypiClust.
+* Evaluation helpers for superpixel and Zaretzki-style multiclass metrics.
 
 
 Installation
@@ -61,10 +47,48 @@ or install into an existing Python 3.13 environment with:
    pip install -r requirements.txt
 
 
-.. _pyscaffold-notes:
+Usage
+=====
 
-Note
-====
+Training and active-learning runs are configured through the YAML files in
+``scripts/configs``.
 
-This project has been set up using PyScaffold 4.6. For details and usage
-information on PyScaffold see https://pyscaffold.org/.
+For example, run one of the graph-sampling benchmark settings from the paper:
+BADGE with max aggregation on PascalVOC-SP using the GPS model.
+
+.. code-block:: bash
+
+   python scripts/train_al.py dataset=pascalvoc-sp model=gps_VOCSP_500k_toenshoff al=badge al.aggr_type=max
+
+Other paper configurations can be run by changing the Hydra config groups, for
+example ``al=coreset``, ``al=typiclust``, ``dataset=coco-sp``, or
+``dataset=zaretzki``.
+
+
+Citation
+========
+
+If you find this code useful, please cite:
+
+.. code-block:: bibtex
+
+   @inproceedings{plettenberg2026alinc,
+     title = {ALINC: Active Learning for Inductive Node Classification via Graph Sampling},
+     author = {Plettenberg, Pascal and Huseljic, Denis and Alcalde, Andre and Sick, Bernhard and Thomas, Josephine M.},
+     booktitle = {ECML PKDD},
+     year = {2026}
+   }
+
+
+Development
+===========
+
+Run the test suite from the repository root:
+
+.. code-block:: bash
+
+   python -m pytest
+
+Datasets, experiment outputs, and generated run artifacts are ignored by git via
+``.gitignore``. Keep large raw data under ``data/`` and experiment outputs under
+``experiments/`` or ``output/``.
