@@ -2,11 +2,14 @@
 ALINC
 =====
 
-Active Learning for Inductive Node Classification.
-
 This repository contains the official implementation for the paper
-``ALINC: Active Learning for Inductive Node Classification via Graph Sampling``,
-accepted at ECML PKDD 2026.
+``ALINC: Active Learning for Inductive Node Classification via Graph Sampling`` 
+by Plettenberg et al., accepted at ECML PKDD 2026.
+
+.. image:: docs/assets/fig_1_pattern_cluster.pdf
+   :alt: ALINC graph-sampling results on PATTERN and CLUSTER from the paper
+   :width: 100%
+
 
 ALINC is an active-learning framework for inductive node-classification
 settings where datasets consist of many independent graphs and annotating one
