@@ -27,6 +27,11 @@ Features
   density, centrality, CoreSet, BADGE, AGE, ANRMAB, and TypiClust.
 * Evaluation helpers for superpixel and Zaretzki-style multiclass metrics.
 
+The active-learning code in ``src/dal_toolbox_graph``, including all graph
+sampling strategies, builds on the `DAL Toolbox`_ by ``dhuseljic``.
+
+.. _DAL Toolbox: https://github.com/dhuseljic/dal-toolbox
+
 
 Installation
 ============
