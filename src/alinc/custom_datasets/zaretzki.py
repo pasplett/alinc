@@ -1,5 +1,6 @@
 import ast
 import os.path as osp
+import logging
 import torch
 
 from collections import defaultdict
@@ -7,6 +8,9 @@ from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
 from torch_geometric.data import Data, InMemoryDataset, download_url
 from typing import List, Optional, Callable
+
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # 1. OGB-Analogous Feature Extractors
@@ -145,7 +149,7 @@ class ZaretzkiDataset(InMemoryDataset):
                     
                     som_indices = {int(idx) for idx in parsed_list}
                 except (ValueError, SyntaxError):
-                    print(f"Error parsing soms for mol {i}: {raw_val}")
+                    logger.warning("Error parsing soms for mol %s: %s", i, raw_val)
 
             # 2. Node Features (x) and labels (y)
             atom_features = []

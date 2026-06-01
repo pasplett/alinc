@@ -1,6 +1,7 @@
 import os.path as osp
 import pickle
 import time
+import logging
 import torch
 
 from alinc.custom_datasets import ZaretzkiDataset
@@ -8,6 +9,9 @@ from alinc.path import DATA_PATH
 from torch_geometric.data import Data
 from torch_geometric.datasets import GNNBenchmarkDataset, LRGBDataset
 from torch_geometric.io import fs
+
+
+logger = logging.getLogger(__name__)
 
 
 def load_dataset(key, *args, **kwargs):
@@ -58,7 +62,7 @@ def log_progress(iterable, every=10, desc="Processing"):
         if i % every == 0 or i == total:
             elapsed = time.time() - start_time
             msg = f"{desc}: {i}" + (f"/{total}" if total else "") + f" done ({elapsed:.1f}s elapsed)"
-            print(msg, flush=True)
+            logger.info(msg)
 
 
 class GNNBenchmarkDataset_Progress(GNNBenchmarkDataset):

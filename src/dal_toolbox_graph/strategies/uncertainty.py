@@ -36,7 +36,6 @@ class UncertaintySampling(Query, ABC):
         al_datamodule: GraphActiveLearningDataModule,
         acq_size: int,
         return_utilities: bool = False,
-        # forward_kwargs: dict = None, TODO
         **kwargs
     ):
         unlabeled_dataloader, unlabeled_indices = al_datamodule.unlabeled_dataloader(
@@ -61,7 +60,7 @@ class UncertaintySampling(Query, ABC):
 
     @abstractmethod
     def get_utilities(self, logits):
-        pass
+        raise NotImplementedError
 
 
 class EntropySampling(UncertaintySampling):

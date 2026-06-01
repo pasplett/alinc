@@ -15,7 +15,7 @@ from dal_toolbox.active_learning.strategies.query import Query
 class CentralitySampling(Query, ABC):
     def __init__(
             self, subset_size=None, random_seed=None, aggr_type="max", 
-            output_types=[]
+            output_types=None
         ):
         super().__init__(random_seed=random_seed)
         self.subset_size = subset_size
@@ -28,7 +28,7 @@ class CentralitySampling(Query, ABC):
             self.aggr_layer = global_add_pool
         else:
             raise KeyError(f"{aggr_type} aggregation does not exist.")
-        self.output_types = output_types
+        self.output_types = output_types or []
 
     @torch.no_grad()
     def query(
@@ -38,7 +38,6 @@ class CentralitySampling(Query, ABC):
         al_datamodule: GraphActiveLearningDataModule,
         acq_size: int,
         return_utilities: bool = False,
-        # forward_kwargs: dict = None, TODO
         **kwargs
     ):
 
@@ -51,8 +50,8 @@ class CentralitySampling(Query, ABC):
         return [unlabeled_indices[idx] for idx in chosen]
     
     @abstractmethod
-    def get_scores(self, model, unlabeled_dataloader, aggr=True):
-        pass
+    def get_scores(self, outputs, aggr=True):
+        raise NotImplementedError
     
 
 class DegreeSampling(CentralitySampling):

@@ -68,7 +68,7 @@ class BaseModel(nn.Module):
             edge_dim=None, edge_hidden_dim=None, node_encoder="linear", 
             edge_encoder="linear", in_feat_dropout=0.0, dropout=0.0, 
             batch_norm=True, residual=True, activation="relu", self_loops=False, 
-            pos_enc=False, pos_enc_dim=2, pos_enc_params={}, readout_type="mlp", 
+            pos_enc=False, pos_enc_dim=2, pos_enc_params=None, readout_type="mlp",
             n_readout_layers=2, device=torch.device("cpu"), **kwargs
         ):
         super(BaseModel, self).__init__()
@@ -126,7 +126,7 @@ class BaseModel(nn.Module):
 
         self.pos_enc = pos_enc
         self.pos_enc_dim = pos_enc_dim
-        self.pos_enc_params = pos_enc_params
+        self.pos_enc_params = pos_enc_params or {}
         if self.pos_enc:
             if self.node_encoder == "embedding":
                 self.encoder_x = nn.Embedding(
@@ -153,9 +153,7 @@ class BaseModel(nn.Module):
         elif self.readout_type.lower() == "linear":
             self.readout_layer = nn.Linear(self.out_dim, self.n_classes)
         else:
-            raise NotImplementedError(
-                f"Unknown readout type {self.readout_layer}!"
-            )
+            raise NotImplementedError(f"Unknown readout type {self.readout_type}!")
 
     def reset_state(self):
         self.load_state_dict(self.init_model_state)

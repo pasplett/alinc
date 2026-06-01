@@ -1,6 +1,7 @@
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+import logging
 
 from torch_geometric.nn.pool import (
     global_max_pool,
@@ -12,6 +13,9 @@ from ..graph_data import GraphActiveLearningDataModule
 from dal_toolbox.active_learning.strategies import Badge as OriginalBadge
 # from rich.progress import track
 from sklearn.metrics import pairwise_distances
+
+
+logger = logging.getLogger(__name__)
 
 
 class Badge(OriginalBadge):
@@ -34,7 +38,6 @@ class Badge(OriginalBadge):
             al_datamodule: GraphActiveLearningDataModule,
             acq_size: int,
             return_utilities: bool = False,
-            # forward_kwargs: dict = None, TODO
             **kwargs
         ):
         unlabeled_dataloader, unlabeled_indices = al_datamodule.unlabeled_dataloader(subset_size=self.subset_size)
@@ -81,7 +84,7 @@ def kmeans_plusplus(X, n_clusters, rng):
         # sample idx with probability proportional to the squared distance
         p = min_dist_squared / np.sum(min_dist_squared)
         if np.any(p[indices] != 0):
-            print('Already sampled centers have probability', p)
+            logger.warning("Already sampled centers have non-zero probability: %s", p)
         idx = rng.choice(range(len(X)), p=p.squeeze())
         indices.append(idx)
         centers.append(X[idx])

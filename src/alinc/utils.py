@@ -1,5 +1,6 @@
 import numpy as np
 from omegaconf import OmegaConf
+import logging
 import os
 import random
 import torch
@@ -15,14 +16,17 @@ from alinc.transforms import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 def check_gpu(log=True):
     if torch.cuda.is_available():
         if log:
-            print("Running on GPU")
+            logger.info("Running on GPU")
         device = "cuda:0"
     else:
         if log:
-            print("Running on CPU")
+            logger.info("Running on CPU")
         device = "cpu"
     return device
 

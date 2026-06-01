@@ -15,18 +15,21 @@ class GraphActiveLearningDataModule(L.LightningDataModule):
     """
     A PyTorch Lightning DataModule for graph active learning workflows.
 
-    This module manages datasets for training, validation, testing, and querying in an active learning context. 
-    It also handles labeled and unlabeled data pools and provides dataloaders for labeled and unlabeled data.
+    This module manages datasets for training, validation, testing, and querying
+    in an active learning context. It also handles labeled and unlabeled data
+    pools and provides dataloaders for labeled and unlabeled data.
 
     It uses the DataLoader from torch_geometric instead of the one from torch.
 
     Args:
         train_dataset (Dataset): The dataset used for training.
-        query_dataset (Dataset, optional): The dataset used for querying unlabeled data. If None, the train_dataset will be used. Defaults to None.
+        query_dataset (Dataset, optional): Dataset used for querying unlabeled
+            data. If None, the train_dataset is used. Defaults to None.
         val_dataset (Dataset, optional): The dataset used for validation. Defaults to None.
         test_dataset (Dataset, optional): The dataset used for testing. Defaults to None.
         train_batch_size (int, optional): The batch size for the training DataLoader. Defaults to 64.
-        predict_batch_size (int, optional): The batch size for the unlabeled/query and prediction DataLoader. Defaults to 256.
+        predict_batch_size (int, optional): Batch size for the unlabeled/query
+            and prediction DataLoader. Defaults to 256.
         seed (int, optional): The seed for random number generation. Defaults to None.
         collator (callable, optional): A custom collator function for the DataLoader. Defaults to None.
 

@@ -104,7 +104,12 @@ class ANRMAB(Query):
 
         query_matrix = torch.stack((density, uncertainty, centrality))
         query_matrix /= query_matrix.sum(1, keepdim=True)
-        probabilities = self.weights * (1 - 3 * self.min_probability_strategy) / self.weights.sum() + self.min_probability_strategy 
+        probabilities = (
+            self.weights
+            * (1 - 3 * self.min_probability_strategy)
+            / self.weights.sum()
+            + self.min_probability_strategy
+        )
         phi = probabilities @ query_matrix
         if not self.aggr_first:
             phi = self.aggr_layer(phi, outputs['batch'])
@@ -126,6 +131,9 @@ class ANRMAB(Query):
             reward = 1 / self.budget * sum(self.reward_terms)
 
             r_hat = reward * query_matrix[:, sampled_idx] / phi[sampled_idx]
+            exploration_bonus = (1 / probabilities) * np.sqrt(
+                np.log(n_total / 0.1) / (3 * self.budget)
+            )
             self.weights *= torch.exp(
-                self.min_probability_strategy / 2 * (r_hat + (1 / probabilities) * np.sqrt(np.log(n_total / 0.1) / (3 * self.budget)))
+                self.min_probability_strategy / 2 * (r_hat + exploration_bonus)
             )

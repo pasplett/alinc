@@ -38,7 +38,6 @@ class DensitySampling(Query, ABC):
             al_datamodule: GraphActiveLearningDataModule,
             acq_size: int,
             return_utilities: bool = False,
-            # forward_kwargs: dict = None, TODO
             **kwargs
         ):
         unlabeled_dataloader, unlabeled_indices = al_datamodule.unlabeled_dataloader(subset_size=self.subset_size)
