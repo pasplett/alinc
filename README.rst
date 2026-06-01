@@ -82,9 +82,10 @@ If you find this code useful, please cite:
 
    @inproceedings{plettenberg2026alinc,
      title = {ALINC: Active Learning for Inductive Node Classification via Graph Sampling},
-     author = {Plettenberg, Pascal and Huseljic, Denis and Alcalde, Andre and Sick, Bernhard and Thomas, Josephine M.},
-     booktitle = {ECML PKDD},
-     year = {2026}
+     author = {Plettenberg, Pascal and Huseljic, Denis and Alcalde, Andr{\'e} and Sick, Bernhard and Thomas, Josephine M.},
+     booktitle = {Joint European Conference on Machine Learning and Knowledge Discovery in Databases},
+     year = {2026},
+     organization = {Springer}
    }
 
 
