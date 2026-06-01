@@ -6,7 +6,7 @@ This repository contains the official implementation for the paper
 ``ALINC: Active Learning for Inductive Node Classification via Graph Sampling`` 
 by Plettenberg et al., accepted at ECML PKDD 2026.
 
-.. image:: docs/assets/fig_1_pattern_cluster.pdf
+.. image:: docs/assets/fig_1_pattern_cluster.png
    :alt: ALINC graph-sampling results on PATTERN and CLUSTER from the paper
    :width: 100%
 
