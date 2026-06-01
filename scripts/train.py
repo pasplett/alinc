@@ -1,3 +1,5 @@
+"""Run a fully supervised graph node-classification training experiment."""
+
 import copy
 import tqdm
 import time

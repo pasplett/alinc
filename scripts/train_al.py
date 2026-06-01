@@ -1,3 +1,5 @@
+"""Run an active-learning graph-sampling experiment for node classification."""
+
 import copy
 import tqdm
 import time
