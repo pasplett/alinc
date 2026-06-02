@@ -5,7 +5,7 @@ defaults:
 
 random_seed: 42
 experiment_name: alinc-active
-mlflow_dir: ./experiments/alinc/active_learning/
+mlflow_dir: ./experiments/active_learning/
 mlflow_db: active_learning.db
 num_workers: 0
 logging: True
