@@ -40,7 +40,6 @@ def main(args):
     train_ds, val_ds, test_ds = build_datasets(args)
     num_features = train_ds.x.shape[1]
     num_classes = torch.max(train_ds.y).item() + 1
-    print(f"Num Classes: ", num_classes)
 
     # Edge attributes
     edge_dim = None
