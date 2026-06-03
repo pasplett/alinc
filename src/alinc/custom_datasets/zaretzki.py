@@ -71,6 +71,16 @@ def bond_to_feature_vector(bond):
     ]
     return bond_feature
 
+
+def murcko_scaffold_smiles(mol):
+    """Return a Murcko scaffold SMILES while tolerating RDKit STEREOANY bonds."""
+    mol_for_scaffold = Chem.Mol(mol)
+    Chem.RemoveStereochemistry(mol_for_scaffold)
+
+    scaffold = MurckoScaffold.GetScaffoldForMol(mol_for_scaffold)
+    Chem.RemoveStereochemistry(scaffold)
+    return Chem.MolToSmiles(scaffold, isomericSmiles=False)
+
 # =============================================================================
 # 2. Zaretzki Dataset Class
 #    Raw data source: https://github.com/molinfo-vienna/FAME.AL
@@ -106,8 +116,18 @@ class ZaretzkiDataset(InMemoryDataset):
             raise KeyError(f"Invalid split {split}!")
         self.split = split
         self.seed = seed
+        dataset_root = root + "/Zaretzki/"
+        processed_paths = [
+            osp.join(dataset_root, "processed", f"zaretzki_dataset_{split_name}.pt")
+            for split_name in ["train", "val", "test"]
+        ]
+        if not force_reload and any(osp.exists(path) for path in processed_paths):
+            force_reload = not all(osp.exists(path) for path in processed_paths)
+            if force_reload:
+                logger.warning("Incomplete Zaretzki processed files found; reprocessing.")
+
         super(ZaretzkiDataset, self).__init__(
-            root + "/Zaretzki/", transform, pre_transform, pre_filter, 
+            dataset_root, transform, pre_transform, pre_filter,
             force_reload=force_reload)
         self.data, self.slices = torch.load(self.processed_paths[0], weights_only=False)
 
@@ -133,7 +153,7 @@ class ZaretzkiDataset(InMemoryDataset):
     def process(self):
         suppl = Chem.SDMolSupplier(self.raw_paths[0], removeHs=False)
         data_list = []
-        all_smiles = []
+        all_scaffolds = []
         
         for i, mol in enumerate(suppl):
             if mol is None:
@@ -194,7 +214,7 @@ class ZaretzkiDataset(InMemoryDataset):
 
             # Store SMILES for scaffold calculation
             smiles = Chem.MolToSmiles(mol)
-            all_smiles.append(smiles)
+            all_scaffolds.append(murcko_scaffold_smiles(mol))
 
             # Create Data Object
             data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y, smiles=smiles)
@@ -204,15 +224,9 @@ class ZaretzkiDataset(InMemoryDataset):
                 
             data_list.append(data)
 
-        # 3. Save Data
-        data, slices = self.collate(data_list)
-        torch.save((data, slices), self.processed_paths[0])
-
-        # 4. Perform Scaffold Split (Bemis-Murcko)
+        # 3. Perform Scaffold Split (Bemis-Murcko)
         scaffolds = defaultdict(list)
-        for i, smiles in enumerate(all_smiles):
-            # Generate the scaffold SMILES
-            scaffold = MurckoScaffold.MurckoScaffoldSmiles(smiles=smiles, includeChirality=False)
+        for i, scaffold in enumerate(all_scaffolds):
             scaffolds[scaffold].append(i)
         
         # Sort scaffolds by size (descending) - this is the standard OGB/MoleculeNet way

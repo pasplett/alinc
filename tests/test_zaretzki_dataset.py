@@ -8,6 +8,7 @@ from alinc.custom_datasets.zaretzki import (
     ALLOWABLE_FEATURES,
     atom_to_feature_vector,
     bond_to_feature_vector,
+    murcko_scaffold_smiles,
     safe_index,
 )
 import alinc.datasets as datasets_module
@@ -39,6 +40,13 @@ def test_atom_and_bond_feature_extractors_return_ogb_style_vectors():
     assert bond_features[0] == safe_index(
         ALLOWABLE_FEATURES["possible_bond_type_list"], str(bond.GetBondType())
     )
+
+
+def test_murcko_scaffold_smiles_handles_stereoany_double_bonds():
+    mol = Chem.MolFromSmiles("CC=CC")
+    mol.GetBondBetweenAtoms(1, 2).SetStereo(Chem.BondStereo.STEREOANY)
+
+    assert murcko_scaffold_smiles(mol) == ""
 
 
 def test_load_dataset_rejects_unknown_dataset_names():
