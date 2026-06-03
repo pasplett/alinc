@@ -9,6 +9,8 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.transforms import Compose
 
 from alinc.transforms import (
+    AddNodeDegree, 
+    AddLapEigendec,
     VOCNodeNorm, 
     VOCEdgeNorm,
     COCONodeNorm,
@@ -113,6 +115,15 @@ test_epoch.__test__ = False
 
 def build_datasets(args):
     from alinc.datasets import load_dataset
+    
+    pre_transform = Compose([
+        AddNodeDegree(),
+        AddLapEigendec(
+            is_undirected=args.dataset.is_undirected, 
+            max_freqs=args.dataset.eigen.max_freqs,
+            norm_type=args.dataset.eigen.norm_type
+        )
+    ])
 
     transform = None
     if args.dataset.name.lower() == "pascalvoc-sp":
@@ -120,9 +131,18 @@ def build_datasets(args):
     elif args.dataset.name.lower() == "coco-sp":
         transform = Compose([COCONodeNorm(), COCOEdgeNorm()])
 
-    train_ds = load_dataset(args.dataset.name, split="train", transform=transform)
-    val_ds = load_dataset(args.dataset.name, split="val", transform=transform)
-    test_ds = load_dataset(args.dataset.name, split="test", transform=transform)
+    train_ds = load_dataset(
+        args.dataset.name, split="train", transform=transform, 
+        pre_transform=pre_transform
+    )
+    val_ds = load_dataset(
+        args.dataset.name, split="val", transform=transform, 
+        pre_transform=pre_transform
+    )
+    test_ds = load_dataset(
+        args.dataset.name, split="test", transform=transform, 
+        pre_transform=pre_transform
+    )
 
     return train_ds, val_ds, test_ds
 

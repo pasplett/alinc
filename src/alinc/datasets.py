@@ -9,6 +9,7 @@ from alinc.path import DATA_PATH
 from torch_geometric.data import Data
 from torch_geometric.datasets import GNNBenchmarkDataset, LRGBDataset
 from torch_geometric.io import fs
+from torch_geometric.transforms import Compose
 
 
 logger = logging.getLogger(__name__)
