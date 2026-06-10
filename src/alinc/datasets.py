@@ -63,6 +63,7 @@ def log_progress(iterable, every=10, desc="Processing"):
         if i % every == 0 or i == total:
             elapsed = time.time() - start_time
             msg = f"{desc}: {i}" + (f"/{total}" if total else "") + f" done ({elapsed:.1f}s elapsed)"
+            print(msg)
             logger.info(msg)
 
 
