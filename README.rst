@@ -36,10 +36,10 @@ sampling strategies, builds on the `DAL Toolbox`_ by ``dhuseljic``.
 Installation
 ============
 
-The project dependency files target Python 3.13 with the newest PyTorch/PyG
-binary stack that still provides a matching ``torch-scatter`` wheel:
-PyTorch 2.11.0 + CUDA 12.8, TorchVision 0.26.0, PyG 2.7.0, and
-``torch-scatter`` 2.1.2 for PyTorch 2.11/CUDA 12.8.
+The project dependency files target Python 3.12 and CUDA 11.8. The supported
+binary stack is PyTorch 2.7.x + CUDA 11.8, TorchVision 0.22.x, PyG 2.7 or
+newer, and ``torch-scatter`` 2.1.2 or newer from the matching PyG CUDA 11.8
+wheel index.
 
 Create the environment with:
 
@@ -48,11 +48,17 @@ Create the environment with:
    conda env create -f environment.yml
    conda activate alinc-github
 
-or install into an existing Python 3.13 environment with:
+This creates the ``alinc-github`` conda environment and installs the package in
+editable mode.
+
+Alternatively, install into an existing Python 3.12 environment with:
 
 .. code-block:: bash
 
    pip install -r requirements.txt
+
+Both dependency files use bounded version ranges instead of exact pins, while
+keeping the PyTorch and PyG package indexes fixed to CUDA 11.8 wheels.
 
 
 Usage
@@ -96,6 +102,7 @@ Run the test suite from the repository root:
 
 .. code-block:: bash
 
+   conda activate alinc-github
    python -m pytest
 
 Datasets, experiment outputs, and generated run artifacts are ignored by git via
